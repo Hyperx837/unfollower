@@ -1,4 +1,6 @@
 import logging
+
+# from twisted.
 from rich.logging import RichHandler
 
 logging.basicConfig(handlers=[RichHandler()])
@@ -32,12 +34,11 @@ DOWNLOAD_HANDLERS = {
 }
 TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 
+
 SPLASH_URL = "http://localhost:8050"
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 # CONCURRENT_REQUESTS = 32
 PLAYWRIGHT_BROWSER_TYPE = "firefox"
-DUPEFILTER_CLASS = "scrapy_splash.SplashAwareDupeFilter"
-HTTPCACHE_STORAGE = "scrapy_splash.SplashAwareFSCacheStorage"
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
