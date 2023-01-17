@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "instagram"
+version = "0.1.0"
+description = "insta follower checker"
+authors = ["Anupama Dissanayake <61502343+Hyperx837@users.noreply.github.com>"]
+license = "MIT"
+
+[too.black]
+line-length = 100
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
