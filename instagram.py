@@ -1,4 +1,6 @@
 import asyncio
+from rich.prompt import Prompt
+from pathlib import Path
 import json
 import sys
 from dataclasses import dataclass
@@ -8,7 +10,6 @@ import aiohttp
 from playwright.async_api import Request, async_playwright
 from rich.console import Console
 
-import credentials
 
 console = Console()
 headers_acquired = asyncio.Event()
@@ -21,8 +22,8 @@ class state:
     headers: dict
     following_count: int
     follower_count: int
-    user: str = credentials.username
-    passw: str = credentials.password
+    user: str
+    passw: str
 
 
 def is_set_method():
@@ -90,9 +91,10 @@ async def find_bastards():
         console.log(f"user `{user}` isn't following you back")
 
     console.log(f"[blue]Which makes it a total of {len(bastards)} bastards")
+    Path("./userdata").mkdir(exist_ok=True)
     json.dump(
         {"followers": list(followers), "following": list(following)},
-        fp=open(f"{state.user}.json", "w"),
+        fp=open(f"./userdata/{state.user}.json", "w"),
     )
 
 
@@ -131,9 +133,15 @@ async def main():
         base_url="https://www.instagram.com", connector=conn
     )
 
-    if not (state.user or state.passw):
-        state.user = console.input("Enter Your Instagram Username: ")
-        state.passw = console.input("Enter Your Password: ")
+    try:
+        import credentials
+
+        state.user = credentials.username
+        state.passw = credentials.password
+
+    except ImportError:
+        state.user = Prompt.ask("Enter Your Instagram Username: ")
+        state.passw = Prompt.ask("Enter Your Password: ", password=True)
 
     tasks = [set_userid(), set_headers()]
     await asyncio.gather(*tasks)
