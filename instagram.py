@@ -1,4 +1,5 @@
 import asyncio
+from playwright._impl._api_types import TimeoutError
 from rich.prompt import Prompt
 from pathlib import Path
 import json
@@ -13,6 +14,25 @@ from rich.console import Console
 
 console = Console()
 headers_acquired = asyncio.Event()
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "-b",
+    "--browser",
+    help="avoid headless launch of the browser",
+    dest="browser",
+    action="store_false",
+)
+parser.add_argument(
+    "-c",
+    "--input-credentials",
+    help="get credentials from stdin",
+    dest="credentials",
+    action="store_true",
+)
+
+args = parser.parse_args()
 
 
 @dataclass
@@ -100,7 +120,7 @@ async def find_bastards():
 
 async def set_headers():
     async with async_playwright() as apw:
-        browser = await apw.firefox.launch(headless=False)
+        browser = await apw.firefox.launch(headless=args.browser)
         console.log("Browser Launched")
         page = await browser.new_page()
         await page.goto("https://instagram.com/")
@@ -109,7 +129,13 @@ async def set_headers():
         await username.fill(state.user)
         await passw.fill(state.passw)
         await page.locator("'Log in'").click()
-        await page.locator("'Not Now'").click()
+        try:
+            await page.locator("'Not Now'").click()
+
+        except TimeoutError:
+            console.log(
+                "[red]Please double check your credentials and launch the program with -b option"
+            )
         console.log("Logged in")
         await page.goto(f"https://instagram.com/{state.user}/following")
         page.on("request", intercept_request)
@@ -134,14 +160,17 @@ async def main():
     )
 
     try:
+        if args.credentials:
+            raise ImportError
+
         import credentials
 
         state.user = credentials.username
         state.passw = credentials.password
 
     except ImportError:
-        state.user = Prompt.ask("Enter Your Instagram Username: ")
-        state.passw = Prompt.ask("Enter Your Password: ", password=True)
+        state.user = Prompt.ask("Enter Your Instagram Username")
+        state.passw = Prompt.ask("Enter Your Password", password=True)
 
     tasks = [set_userid(), set_headers()]
     await asyncio.gather(*tasks)
