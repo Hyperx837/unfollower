@@ -1,16 +1,15 @@
 import asyncio
-from playwright._impl._api_types import TimeoutError
-from rich.prompt import Prompt
-from pathlib import Path
 import json
 import sys
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Literal
 
 import aiohttp
+from playwright._impl._api_types import TimeoutError
 from playwright.async_api import Request, async_playwright
 from rich.console import Console
-
+from rich.prompt import Prompt
 
 console = Console()
 headers_acquired = asyncio.Event()
@@ -115,7 +114,9 @@ async def find_bastards():
     json.dump(
         {"followers": list(followers), "following": list(following)},
         fp=open(f"./userdata/{state.user}.json", "w"),
+        indent=2,
     )
+    console.log(f"[green]Saved results to ./userdata/{state.user}")
 
 
 async def set_headers():
@@ -125,7 +126,11 @@ async def set_headers():
         page = await browser.new_page()
         await page.goto("https://instagram.com/")
         await page.wait_for_selector("input")
-        username, passw = await page.query_selector_all("input")
+        await page.wait_for_timeout(1000)
+        try:
+            username, passw = await page.query_selector_all("input")
+        except ValueError:
+            console.log("Please restart the program ")
         await username.fill(state.user)
         await passw.fill(state.passw)
         await page.locator("'Log in'").click()
